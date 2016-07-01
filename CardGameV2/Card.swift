@@ -75,11 +75,12 @@ class Card : SKSpriteNode {
   
   internal func wiggle(animate: Bool) {
     if animate {
-      let wiggleIn = SKAction.scaleXTo(1.0, duration: 0.2)
-      let wiggleOut = SKAction.scaleXTo(1.2, duration: 0.2)
-      let wiggle = SKAction.sequence([wiggleIn, wiggleOut])
+      let rotateWiggleIn = SKAction.rotateToAngle((CGFloat(M_PI) / 180.0) * 15.0, duration: 0.10)
+      let rotateWiggleOut = SKAction.rotateToAngle((CGFloat(M_PI) / 180.0) * -15.0, duration: 0.10)
+      let rotateRest = SKAction.rotateToAngle(0.0, duration: 0.15)
+      let rotationSequence = SKAction.sequence([rotateWiggleIn, rotateWiggleOut, rotateRest])
       
-      runAction(SKAction.repeatActionForever(wiggle), withKey: "wiggle")
+      runAction(rotationSequence, withKey: "wiggle")
     }
     else {
       removeActionForKey("wiggle")

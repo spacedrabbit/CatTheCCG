@@ -50,18 +50,28 @@ class GameScene: SKScene {
   // MARK: - Touch Overrides
   override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
     
-    locateCardInScene(fromTouches: touches) { (card: Card?, touchPoint: CGPoint) in
-      card?.zPosition = CardLevel.moving.rawValue
-      
-      card?.wiggle(true)
-      card?.pickup()
+    locateCardInScene(fromTouches: touches) { (card: Card?, touchPoint: CGPoint, touchOfInterest: UITouch?) in
+      if let touchedCard: Card = card {
+        if touchOfInterest?.tapCount > 1 {
+          touchedCard.enlarge()
+        }
+        if touchedCard.enlarged { return }
+        
+        touchedCard.zPosition = CardLevel.moving.rawValue
+        touchedCard.pickup()
+        touchedCard.wiggle(true)
+      }
     }
 
   }
   
   override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
 
-    locateCardInScene(fromTouches: touches) { (card: Card?, touchPoint: CGPoint) in
+    locateCardInScene(fromTouches: touches) { (card: Card?, touchPoint: CGPoint, touchOfInterest: UITouch?) in
+      if card != nil {
+        if card!.enlarged { return }
+      }
+      
       card?.position = touchPoint
     }
     
@@ -69,14 +79,16 @@ class GameScene: SKScene {
   
   override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
     
-    locateCardInScene(fromTouches: touches) { (card: Card?, touchPoint: CGPoint) in
+    locateCardInScene(fromTouches: touches) { (card: Card?, touchPoint: CGPoint, touchOfInterest: UITouch?) in
       if card != nil {
+        if card!.enlarged { return }
+        
         card!.zPosition = CardLevel.board.rawValue
         card!.removeFromParent()
         self.addChild(card!)
         
-        card?.wiggle(false)
         card?.drop()
+        card?.wiggle(false)
       }
     }
     
@@ -86,17 +98,19 @@ class GameScene: SKScene {
     guard let validTouches = touches else { return }
     // seems to be a problem with the sim where the touch is lost in some cpu cycle. so this code isn't really doing anything
     
-    locateCardInScene(fromTouches: validTouches) { (card: Card?, touchPoint: CGPoint) in
+    locateCardInScene(fromTouches: validTouches) { (card: Card?, touchPoint: CGPoint, touchOfInterest: UITouch?) in
+      card?.position = touchPoint
       card?.wiggle(false)
+      card?.drop()
     }
   }
   
   // Mark: - Helpers
-  private func locateCardInScene(fromTouches touches: Set<UITouch>, actionBlock: (card: Card?, touchPoint: CGPoint)->Void) {
+  private func locateCardInScene(fromTouches touches: Set<UITouch>, actionBlock: (card: Card?, touchPoint: CGPoint, touchOfInterest: UITouch?)->Void) {
     for touch in touches {
       let location = touch.locationInNode(self)
       if let card: Card = nodeAtPoint(location) as? Card {
-        actionBlock(card: card, touchPoint: location)
+        actionBlock(card: card, touchPoint: location, touchOfInterest: touch)
       }
     }
   }

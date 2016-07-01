@@ -22,6 +22,34 @@
 
 import SpriteKit
 
+enum CardType :Int {
+  case Wolf,
+  Bear,
+  Dragon
+}
+
 class Card : SKSpriteNode {
+  let cardType :CardType
+  let frontTexture :SKTexture
+  let backTexture :SKTexture
   
+  required init?(coder aDecoder: NSCoder) {
+    fatalError("NSCoding not supported")
+  }
+  
+  init(cardType: CardType) {
+    self.cardType = cardType
+    backTexture = SKTexture(imageNamed: "card_back")
+    
+    switch cardType {
+    case .Wolf:
+      frontTexture = SKTexture(imageNamed: "card_creature_wolf")
+    case .Bear:
+      frontTexture = SKTexture(imageNamed: "card_creature_bear")
+    case .Dragon:
+      frontTexture = SKTexture(imageNamed: "card_creature_dragon")
+    }
+    
+    super.init(texture: frontTexture, color: .clearColor(), size: frontTexture.size())
+  }
 }

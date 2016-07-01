@@ -22,8 +22,14 @@
 
 import SpriteKit
 
-class GameScene: SKScene {
+enum CardLevel :CGFloat {
+  case board = 10
+  case moving = 100
+  case enlarged = 200
+}
 
+class GameScene: SKScene {
+  
   override func didMoveToView(view: SKView) {
     let bg = SKSpriteNode(imageNamed: "bg_blank")
     bg.anchorPoint = CGPoint.zero
@@ -31,6 +37,54 @@ class GameScene: SKScene {
     addChild(bg)
     
     
+    let wolf = Card(cardType: .Wolf)
+    wolf.position = CGPointMake(100,200)
+    addChild(wolf)
+    
+    let bear = Card(cardType: .Bear)
+    bear.position = CGPointMake(300, 200)
+    addChild(bear)
+  }
+  
+  
+  // MARK: - Touch Overrides
+  override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    
+    locateCardInNode(fromTouches: touches) { (card: Card?, touchPoint: CGPoint) in
+      card?.zPosition = CardLevel.moving.rawValue
     }
 
+  }
+  
+  override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
+
+    locateCardInNode(fromTouches: touches) { (card: Card?, touchPoint: CGPoint) in
+      card?.position = touchPoint
+    }
+    
+  }
+  
+  override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    
+    locateCardInNode(fromTouches: touches) { (card: Card?, touchPoint: CGPoint) in
+      if card != nil {
+        card!.zPosition = CardLevel.board.rawValue
+        card!.removeFromParent()
+        self.addChild(card!)
+      }
+    }
+    
+  }
+  
+  
+  // Mark: - Helpers
+  private func locateCardInNode(fromTouches touches: Set<UITouch>, actionBlock: (card: Card?, touchPoint: CGPoint)->Void) {
+    for touch in touches {
+      let location = touch.locationInNode(self)
+      if let card: Card = nodeAtPoint(location) as? Card {
+        actionBlock(card: card, touchPoint: location)
+      }
+    }
+  }
+  
 }

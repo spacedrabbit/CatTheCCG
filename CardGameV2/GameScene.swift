@@ -50,15 +50,18 @@ class GameScene: SKScene {
   // MARK: - Touch Overrides
   override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
     
-    locateCardInNode(fromTouches: touches) { (card: Card?, touchPoint: CGPoint) in
+    locateCardInScene(fromTouches: touches) { (card: Card?, touchPoint: CGPoint) in
       card?.zPosition = CardLevel.moving.rawValue
+      
+      card?.wiggle(true)
+      card?.pickup()
     }
 
   }
   
   override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
 
-    locateCardInNode(fromTouches: touches) { (card: Card?, touchPoint: CGPoint) in
+    locateCardInScene(fromTouches: touches) { (card: Card?, touchPoint: CGPoint) in
       card?.position = touchPoint
     }
     
@@ -66,19 +69,30 @@ class GameScene: SKScene {
   
   override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
     
-    locateCardInNode(fromTouches: touches) { (card: Card?, touchPoint: CGPoint) in
+    locateCardInScene(fromTouches: touches) { (card: Card?, touchPoint: CGPoint) in
       if card != nil {
         card!.zPosition = CardLevel.board.rawValue
         card!.removeFromParent()
         self.addChild(card!)
+        
+        card?.wiggle(false)
+        card?.drop()
       }
     }
     
   }
   
+  override func touchesCancelled(touches: Set<UITouch>?, withEvent event: UIEvent?) {
+    guard let validTouches = touches else { return }
+    // seems to be a problem with the sim where the touch is lost in some cpu cycle. so this code isn't really doing anything
+    
+    locateCardInScene(fromTouches: validTouches) { (card: Card?, touchPoint: CGPoint) in
+      card?.wiggle(false)
+    }
+  }
   
   // Mark: - Helpers
-  private func locateCardInNode(fromTouches touches: Set<UITouch>, actionBlock: (card: Card?, touchPoint: CGPoint)->Void) {
+  private func locateCardInScene(fromTouches touches: Set<UITouch>, actionBlock: (card: Card?, touchPoint: CGPoint)->Void) {
     for touch in touches {
       let location = touch.locationInNode(self)
       if let card: Card = nodeAtPoint(location) as? Card {

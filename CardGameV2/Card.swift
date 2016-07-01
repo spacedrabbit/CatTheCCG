@@ -32,6 +32,8 @@ class Card : SKSpriteNode {
   let cardType :CardType
   let frontTexture :SKTexture
   let backTexture :SKTexture
+  var damage = 0
+  let damageLabel :SKLabelNode
   
   required init?(coder aDecoder: NSCoder) {
     fatalError("NSCoding not supported")
@@ -50,6 +52,37 @@ class Card : SKSpriteNode {
       frontTexture = SKTexture(imageNamed: "card_creature_dragon")
     }
     
+    damageLabel = SKLabelNode(fontNamed: "OpenSans-Bold")
+    damageLabel.name = "damageLabel"
+    damageLabel.fontSize = 12
+    damageLabel.fontColor = SKColor(red: 0.47, green: 0.0, blue: 0.0, alpha: 1.0)
+    damageLabel.text = "0"
+    damageLabel.position = CGPoint(x: 25, y: 40)
+    
     super.init(texture: frontTexture, color: .clearColor(), size: frontTexture.size())
+    self.addChild(damageLabel)
+  }
+  
+  internal func pickup() {
+    self.removeActionForKey("drop")
+    self.runAction(SKAction.scaleTo(1.3, duration: 0.15), withKey: "pickup")
+  }
+  
+  internal func drop() {
+    self.removeActionForKey("pickup")
+    self.runAction(SKAction.scaleTo(1.0, duration: 0.15), withKey: "drop")
+  }
+  
+  internal func wiggle(animate: Bool) {
+    if animate {
+      let wiggleIn = SKAction.scaleXTo(1.0, duration: 0.2)
+      let wiggleOut = SKAction.scaleXTo(1.2, duration: 0.2)
+      let wiggle = SKAction.sequence([wiggleIn, wiggleOut])
+      
+      runAction(SKAction.repeatActionForever(wiggle), withKey: "wiggle")
+    }
+    else {
+      removeActionForKey("wiggle")
+    }
   }
 }

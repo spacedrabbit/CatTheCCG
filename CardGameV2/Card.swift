@@ -23,22 +23,22 @@
 import SpriteKit
 
 enum CardType: Int {
-  case Wolf,
-  Bear,
-  Dragon
+  case Wolf
+  case Bear
+  case Dragon
 }
 
 class Card : SKSpriteNode {
   let cardType: CardType
   let frontTexture: SKTexture
-  let backTexture: SKTexture
+  let backTexture: SKTexture = SKTexture(imageNamed: "card_back")
   var damage = 0
-  let damageLabel: SKLabelNode
+  
   var faceUp = true
   var enlarged = false
   var savedPosition = CGPoint.zero
-  let largeTextureFilename :String
-  var largeTexture :SKTexture?
+  let largeTextureFilename: String
+  var largeTexture: SKTexture?
   
   required init?(coder aDecoder: NSCoder) {
     fatalError("NSCoding not supported")
@@ -46,8 +46,6 @@ class Card : SKSpriteNode {
   
   init(cardType: CardType) {
     self.cardType = cardType
-    backTexture = SKTexture(imageNamed: "card_back")
-    
     
     switch cardType {
     case .Wolf:
@@ -61,48 +59,49 @@ class Card : SKSpriteNode {
       largeTextureFilename = "card_creature_dragon_large"
     }
     
-    damageLabel = SKLabelNode(fontNamed: "OpenSans-Bold")
-    damageLabel.name = "damageLabel"
-    damageLabel.fontSize = 12
-    damageLabel.fontColor = SKColor(red: 0.47, green: 0.0, blue: 0.0, alpha: 1.0)
-    damageLabel.text = "0"
-    damageLabel.position = CGPoint(x: 25, y: 40)
-    
     super.init(texture: frontTexture, color: .clearColor(), size: frontTexture.size())
     self.addChild(damageLabel)
   }
   
   internal func pickup(now: Bool = true) -> SKAction {
     let scaleAction: SKAction = SKAction.scaleTo(1.3, duration: 0.15)
-    self.removeActionForKey("drop")
+    let wiggleAction: SKAction = wiggle(true)
+    
+    let actionGroup: SKAction = SKAction.group([scaleAction, wiggleAction])
     if now {
-      self.runAction(scaleAction, withKey: "pickup")
+      self.runAction(actionGroup)
     }
+    
     return scaleAction
   }
   
   internal func drop(now: Bool = true) -> SKAction {
     let scaleAction: SKAction = SKAction.scaleTo(1.0, duration: 0.15)
-    self.removeActionForKey("pickup")
+    let nonWiggleAction: SKAction = wiggle(false)
+    
+    let actionGroup: SKAction = SKAction.group([scaleAction, nonWiggleAction])
     if now {
-      self.runAction(scaleAction, withKey: "drop")
+      self.runAction(actionGroup)
     }
+    
     return scaleAction
   }
   
-  internal func wiggle(animate: Bool) {
+  internal func wiggle(animate: Bool) -> SKAction {
+    let rotateWiggleIn = SKAction.rotateToAngle((CGFloat(M_PI) / 180.0) * 15.0, duration: 0.10)
+    let rotateWiggleOut = SKAction.rotateToAngle((CGFloat(M_PI) / 180.0) * -15.0, duration: 0.10)
+    let rotateRest = SKAction.rotateToAngle(0.0, duration: 0.15)
+    let rotationSequence = SKAction.sequence([rotateWiggleIn, rotateWiggleOut, rotateRest])
+    
     if animate {
-      let rotateWiggleIn = SKAction.rotateToAngle((CGFloat(M_PI) / 180.0) * 15.0, duration: 0.10)
-      let rotateWiggleOut = SKAction.rotateToAngle((CGFloat(M_PI) / 180.0) * -15.0, duration: 0.10)
-      let rotateRest = SKAction.rotateToAngle(0.0, duration: 0.15)
-      let rotationSequence = SKAction.sequence([rotateWiggleIn, rotateWiggleOut, rotateRest])
-      
-      runAction(rotationSequence, withKey: "wiggle")
+      runAction(rotationSequence)
+      return rotationSequence
     }
     else {
       // fixes mid-animation wiggle on touch ending
-      runAction(SKAction.rotateToAngle(0.0, duration: 0.10, shortestUnitArc: true), withKey: "endWiggle")
-      removeActionForKey("wiggle")
+      let noWiggles: SKAction = SKAction.rotateToAngle(0.0, duration: 0.10, shortestUnitArc: true)
+      runAction(noWiggles)
+      return noWiggles
     }
   }
   
@@ -112,20 +111,13 @@ class Card : SKSpriteNode {
     
     setScale(1.0)
     
-    if faceUp {
-      runAction(firstHalfFlip) {
-        self.texture = self.backTexture
-        self.damageLabel.hidden = true
-
-        self.runAction(secondHalfFlip)
-      }
-    } else {
-      runAction(firstHalfFlip) {
-        self.texture = self.frontTexture
-        self.damageLabel.hidden = false
-        
-        self.runAction(secondHalfFlip)
-      }
+    let (newTexture, hideLabel): (SKTexture, Bool) = faceUp ? (self.backTexture, true) : (self.frontTexture, false)
+    
+    runAction(firstHalfFlip) { 
+      self.texture = newTexture
+      self.damageLabel.hidden = hideLabel
+      
+      self.runAction(secondHalfFlip)
     }
     faceUp = !faceUp
   }
@@ -161,5 +153,17 @@ class Card : SKSpriteNode {
       }
     }
   }
+  
+  
+  // MARK: Lazy Instances
+  internal lazy var damageLabel: SKLabelNode = {
+    let damageLabel: SKLabelNode =  SKLabelNode(fontNamed: "OpenSans-Bold")
+    damageLabel.name = "damageLabel"
+    damageLabel.fontSize = 12
+    damageLabel.fontColor = SKColor(red: 0.47, green: 0.0, blue: 0.0, alpha: 1.0)
+    damageLabel.text = "0"
+    damageLabel.position = CGPoint(x: 25, y: 40)
+    return damageLabel
+  }()
 
 }

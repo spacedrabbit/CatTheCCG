@@ -59,7 +59,6 @@ class GameScene: SKScene {
         
         touchedCard.zPosition = CardLevel.moving.rawValue
         touchedCard.pickup()
-        touchedCard.wiggle(true)
       }
     }
 
@@ -88,7 +87,6 @@ class GameScene: SKScene {
         self.addChild(card!)
         
         card?.drop()
-        card?.wiggle(false)
       }
     }
     

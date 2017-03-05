@@ -21,6 +21,30 @@
  */
 
 import SpriteKit
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l < r
+  case (nil, _?):
+    return true
+  default:
+    return false
+  }
+}
+
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l > r
+  default:
+    return rhs < lhs
+  }
+}
+
 
 enum CardLevel :CGFloat {
   case board = 10
@@ -30,25 +54,25 @@ enum CardLevel :CGFloat {
 
 class GameScene: SKScene {
   
-  override func didMoveToView(view: SKView) {
+  override func didMove(to view: SKView) {
     let bg = SKSpriteNode(imageNamed: "bg_blank")
     bg.anchorPoint = CGPoint.zero
     bg.position = CGPoint.zero
     addChild(bg)
     
     
-    let wolf = Card(cardType: .Wolf)
-    wolf.position = CGPointMake(100,200)
+    let wolf = Card(cardType: .wolf)
+    wolf.position = CGPoint(x: 100,y: 200)
     addChild(wolf)
     
-    let bear = Card(cardType: .Bear)
-    bear.position = CGPointMake(300, 200)
+    let bear = Card(cardType: .bear)
+    bear.position = CGPoint(x: 300, y: 200)
     addChild(bear)
   }
   
   
   // MARK: - Touch Overrides
-  override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+  override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
     
     locateCardInScene(fromTouches: touches) { (card: Card?, touchPoint: CGPoint, touchOfInterest: UITouch?) in
       if let touchedCard: Card = card {
@@ -64,7 +88,7 @@ class GameScene: SKScene {
 
   }
   
-  override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
+  override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
 
     locateCardInScene(fromTouches: touches) { (card: Card?, touchPoint: CGPoint, touchOfInterest: UITouch?) in
       if card != nil {
@@ -76,7 +100,7 @@ class GameScene: SKScene {
     
   }
   
-  override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
+  override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
     
     locateCardInScene(fromTouches: touches) { (card: Card?, touchPoint: CGPoint, touchOfInterest: UITouch?) in
       if card != nil {
@@ -92,11 +116,10 @@ class GameScene: SKScene {
     
   }
   
-  override func touchesCancelled(touches: Set<UITouch>?, withEvent event: UIEvent?) {
-    guard let validTouches = touches else { return }
+  override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
     // seems to be a problem with the sim where the touch is lost in some cpu cycle. so this code isn't really doing anything
     
-    locateCardInScene(fromTouches: validTouches) { (card: Card?, touchPoint: CGPoint, touchOfInterest: UITouch?) in
+    locateCardInScene(fromTouches: touches) { (card: Card?, touchPoint: CGPoint, touchOfInterest: UITouch?) in
       card?.position = touchPoint
       card?.wiggle(false)
       card?.drop()
@@ -104,11 +127,11 @@ class GameScene: SKScene {
   }
   
   // Mark: - Helpers
-  private func locateCardInScene(fromTouches touches: Set<UITouch>, actionBlock: (card: Card?, touchPoint: CGPoint, touchOfInterest: UITouch?)->Void) {
+  fileprivate func locateCardInScene(fromTouches touches: Set<UITouch>, actionBlock: (_ card: Card?, _ touchPoint: CGPoint, _ touchOfInterest: UITouch?)->Void) {
     for touch in touches {
-      let location = touch.locationInNode(self)
-      if let card: Card = nodeAtPoint(location) as? Card {
-        actionBlock(card: card, touchPoint: location, touchOfInterest: touch)
+      let location = touch.location(in: self)
+      if let card: Card = atPoint(location) as? Card {
+        actionBlock(card, location, touch)
       }
     }
   }

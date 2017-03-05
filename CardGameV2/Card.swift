@@ -23,9 +23,9 @@
 import SpriteKit
 
 enum CardType: Int {
-  case Wolf
-  case Bear
-  case Dragon
+  case wolf
+  case bear
+  case dragon
 }
 
 class Card : SKSpriteNode {
@@ -48,88 +48,88 @@ class Card : SKSpriteNode {
     self.cardType = cardType
     
     switch cardType {
-    case .Wolf:
+    case .wolf:
       frontTexture = SKTexture(imageNamed: "card_creature_wolf")
       largeTextureFilename = "card_creature_wolf_large"
-    case .Bear:
+    case .bear:
       frontTexture = SKTexture(imageNamed: "card_creature_bear")
       largeTextureFilename = "card_creature_bear_large"
-    case .Dragon:
+    case .dragon:
       frontTexture = SKTexture(imageNamed: "card_creature_dragon")
       largeTextureFilename = "card_creature_dragon_large"
     }
     
-    super.init(texture: frontTexture, color: .clearColor(), size: frontTexture.size())
+    super.init(texture: frontTexture, color: .clear, size: frontTexture.size())
     self.addChild(damageLabel)
   }
   
-  internal func pickup(now: Bool = true) -> SKAction {
-    let scaleAction: SKAction = SKAction.scaleTo(1.3, duration: 0.15)
+  @discardableResult internal func pickup(_ now: Bool = true) -> SKAction {
+    let scaleAction: SKAction = SKAction.scale(to: 1.3, duration: 0.15)
     let wiggleAction: SKAction = wiggle(true)
     
     let actionGroup: SKAction = SKAction.group([scaleAction, wiggleAction])
     if now {
-      self.runAction(actionGroup)
+      self.run(actionGroup)
     }
     
     return scaleAction
   }
   
-  internal func drop(now: Bool = true) -> SKAction {
-    let scaleAction: SKAction = SKAction.scaleTo(1.0, duration: 0.15)
+  @discardableResult internal func drop(_ now: Bool = true) -> SKAction {
+    let scaleAction: SKAction = SKAction.scale(to: 1.0, duration: 0.15)
     let nonWiggleAction: SKAction = wiggle(false)
     
     let actionGroup: SKAction = SKAction.group([scaleAction, nonWiggleAction])
     if now {
-      self.runAction(actionGroup)
+      self.run(actionGroup)
     }
     
     return scaleAction
   }
   
-  internal func wiggle(animate: Bool) -> SKAction {
-    let rotateWiggleIn = SKAction.rotateToAngle((CGFloat(M_PI) / 180.0) * 15.0, duration: 0.10)
-    let rotateWiggleOut = SKAction.rotateToAngle((CGFloat(M_PI) / 180.0) * -15.0, duration: 0.10)
-    let rotateRest = SKAction.rotateToAngle(0.0, duration: 0.15)
+  @discardableResult internal func wiggle(_ animate: Bool) -> SKAction {
+    let rotateWiggleIn = SKAction.rotate(toAngle: (CGFloat.pi / 180.0) * 15.0, duration: 0.10)
+    let rotateWiggleOut = SKAction.rotate(toAngle: (CGFloat.pi / 180.0) * -15.0, duration: 0.10)
+    let rotateRest = SKAction.rotate(toAngle: 0.0, duration: 0.15)
     let rotationSequence = SKAction.sequence([rotateWiggleIn, rotateWiggleOut, rotateRest])
     
     if animate {
-      runAction(rotationSequence)
+      run(rotationSequence)
       return rotationSequence
     }
     else {
       // fixes mid-animation wiggle on touch ending
-      let noWiggles: SKAction = SKAction.rotateToAngle(0.0, duration: 0.10, shortestUnitArc: true)
-      runAction(noWiggles)
+      let noWiggles: SKAction = SKAction.rotate(toAngle: 0.0, duration: 0.10, shortestUnitArc: true)
+      run(noWiggles)
       return noWiggles
     }
   }
   
   func flip() {
-    let firstHalfFlip = SKAction.scaleXTo(0.0, duration: 0.4)
-    let secondHalfFlip = SKAction.scaleXTo(1.0, duration: 0.4)
+    let firstHalfFlip = SKAction.scaleX(to: 0.0, duration: 0.4)
+    let secondHalfFlip = SKAction.scaleX(to: 1.0, duration: 0.4)
     
     setScale(1.0)
     
     let (newTexture, hideLabel): (SKTexture, Bool) = faceUp ? (self.backTexture, true) : (self.frontTexture, false)
     
-    runAction(firstHalfFlip) { 
+    run(firstHalfFlip, completion: { 
       self.texture = newTexture
-      self.damageLabel.hidden = hideLabel
+      self.damageLabel.isHidden = hideLabel
       
-      self.runAction(secondHalfFlip)
-    }
+      self.run(secondHalfFlip)
+    }) 
     faceUp = !faceUp
   }
   
   func enlarge() {
     if enlarged {
-      let slide = SKAction.moveTo(savedPosition, duration:0.3)
-      let scaleDown = SKAction.scaleTo(1.0, duration:0.3)
-      runAction(SKAction.group([slide, scaleDown])) {
+      let slide = SKAction.move(to: savedPosition, duration:0.3)
+      let scaleDown = SKAction.scale(to: 1.0, duration:0.3)
+      run(SKAction.group([slide, scaleDown]), completion: {
         self.enlarged = false
         self.zPosition = CardLevel.board.rawValue
-      }
+      }) 
     } else {
       enlarged = true
       savedPosition = position
@@ -147,9 +147,9 @@ class Card : SKSpriteNode {
         removeAllActions()
         zRotation = 0
         let newPosition = CGPoint(x: parent.frame.midX, y: parent.frame.midY)
-        let slide = SKAction.moveTo(newPosition, duration:0.3)
-        let scaleUp = SKAction.scaleTo(5.0, duration:0.3)
-        runAction(SKAction.group([slide, scaleUp]))
+        let slide = SKAction.move(to: newPosition, duration:0.3)
+        let scaleUp = SKAction.scale(to: 5.0, duration:0.3)
+        run(SKAction.group([slide, scaleUp]))
       }
     }
   }
